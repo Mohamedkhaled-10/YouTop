@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>تسجيل الدخول / إنشاء حساب</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script defer src="auth.js"></script>
+  <style>
+    body { font-family: sans-serif; direction: rtl; padding: 30px; background: #f2f2f2; }
+    .form { background: white; padding: 20px; border-radius: 10px; max-width: 400px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    input { width: 100%; padding: 10px; margin-top: 10px; }
+    button { width: 100%; padding: 10px; margin-top: 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; }
+    .toggle { margin-top: 15px; text-align: center; cursor: pointer; color: #007bff; }
+  </style>
+</head>
+<body>
+  <div class="form">
+    <h2 id="form-title">تسجيل الدخول</h2>
+    <input type="email" id="email" placeholder="البريد الإلكتروني" />
+    <input type="password" id="password" placeholder="كلمة السر" />
+    <button id="submit-btn">دخول</button>
+    <div class="toggle" id="toggle-form">ليس لديك حساب؟ أنشئ واحدًا</div>
+  </div>
+</body>
+</html>

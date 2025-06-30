@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>رفع فيديو</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script defer src="upload.js"></script>
+  <style>
+    body { font-family: sans-serif; direction: rtl; padding: 30px; background: #f2f2f2; }
+    .form { background: white; padding: 20px; border-radius: 10px; max-width: 500px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    input, textarea { width: 100%; padding: 10px; margin-top: 10px; }
+    button { width: 100%; padding: 10px; margin-top: 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; }
+  </style>
+</head>
+<body>
+
+  <div class="form">
+    <h2>رفع فيديو جديد</h2>
+    <input type="file" id="videoFile" accept="video/*">
+    <input type="file" id="thumbnailFile" accept="image/*">
+    <input type="text" id="title" placeholder="عنوان الفيديو">
+    <textarea id="description" placeholder="وصف الفيديو"></textarea>
+    <button onclick="uploadVideo()">رفع الفيديو</button>
+  </div>
+
+</body>
+</html>

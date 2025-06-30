@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>مشاهدة الفيديو</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <style>
+    body { margin: 0; font-family: sans-serif; direction: rtl; background-color: #f9f9f9; }
+    .container { display: flex; flex-direction: row; gap: 30px; padding: 20px; }
+    .main-video { flex: 2; }
+    .main-video video { width: 100%; border-radius: 10px; }
+    .video-details { margin-top: 10px; }
+    .video-details h2 { margin: 10px 0; }
+    .sidebar { flex: 1; }
+    .video-suggestion {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      background-color: white;
+      padding: 8px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.05);
+      cursor: pointer;
+    }
+    .video-suggestion img {
+      width: 120px;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+    .video-suggestion div {
+      flex: 1;
+    }
+    .video-suggestion h4 {
+      margin: 0;
+      font-size: 15px;
+      color: #333;
+    }
+    .video-suggestion p {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: #777;
+    }
+    .comments {
+      margin-top: 30px;
+    }
+    .comments textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    .comments button {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .comment-box {
+      background: #fff;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.05);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="main-video">
+      <video id="videoPlayer" controls></video>
+      <div class="video-details">
+        <h2 id="videoTitle"></h2>
+        <p><strong>الرافع:</strong> <span id="uploader"></span></p>
+        <p><strong>المشاهدات:</strong> <span id="views"></span></p>
+        <p id="videoDescription"></p>
+      </div>
+
+      <div class="comments">
+        <h3>التعليقات</h3>
+        <textarea id="commentInput" placeholder="اكتب تعليقك..." rows="3"></textarea>
+        <button onclick="submitComment()">نشر</button>
+        <div id="commentList"></div>
+      </div>
+    </div>
+
+    <div class="sidebar" id="suggestions">
+      <!-- اقتراحات الفيديو -->
+    </div>
+  </div>
+
+  <script>
+    const db = firebase.firestore();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const videoId = urlParams.get("id");
+
+    if (!videoId) {
+      alert("فيديو غير موجود");
+      window.location.href = "index.html";
+    }
+
+    const videoRef = db.collection("videos").doc(videoId);
+
+    db.runTransaction(async (transaction) => {
+      const doc = await transaction.get(videoRef);
+      if (!doc.exists) {
+        alert("الفيديو غير موجود");
+        window.location.href = "index.html";
+        return;
+      }
+
+      const data = doc.data();
+      const newViews = (data.views || 0) + 1;
+
+      transaction.update(videoRef, { views: newViews });
+
+      document.getElementById("videoPlayer").src = data.videoURL;
+      document.getElementById("videoTitle").textContent = data.title;
+      document.getElementById("uploader").textContent = data.uploader || "مجهول";
+      document.getElementById("views").textContent = newViews;
+      document.getElementById("videoDescription").textContent = data.description || "";
+    }).catch(error => {
+      console.error("خطأ في تحميل الفيديو:", error);
+      alert("حدث خطأ");
+    });
+
+    const suggestionContainer = document.getElementById("suggestions");
+
+    db.collection("videos").limit(5).get().then(snapshot => {
+      snapshot.forEach(doc => {
+        if (doc.id === videoId) return;
+        const data = doc.data();
+
+        const div = document.createElement("div");
+        div.className = "video-suggestion";
+        div.innerHTML = `
+          <img src="${data.thumbnailURL}" alt="صورة مصغرة">
+          <div>
+            <h4>${data.title}</h4>
+            <p>${data.uploader || "مستخدم"}</p>
+          </div>
+        `;
+        div.onclick = () => {
+          window.location.href = `watch.html?id=${doc.id}`;
+        };
+        suggestionContainer.appendChild(div);
+      });
+    });
+
+    function submitComment() {
+      const user = firebase.auth().currentUser;
+      const commentText = document.getElementById("commentInput").value.trim();
+
+      if (!commentText) return alert("اكتب تعليقًا أولًا");
+      if (!user) return alert("يجب تسجيل الدخول أولًا");
+
+      db.collection("videos").doc(videoId).collection("comments").add({
+        text: commentText,
+        author: user.email || "مستخدم مجهول",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        document.getElementById("commentInput").value = "";
+        loadComments();
+      });
+    }
+
+    function loadComments() {
+      const list = document.getElementById("commentList");
+      list.innerHTML = "<p>جاري التحميل...</p>";
+
+      db.collection("videos").doc(videoId)
+        .collection("comments")
+        .orderBy("createdAt", "desc")
+        .get()
+        .then(snapshot => {
+          list.innerHTML = "";
+          snapshot.forEach(doc => {
+            const c = doc.data();
+            const commentDiv = document.createElement("div");
+            commentDiv.className = "comment-box";
+            commentDiv.innerHTML = `
+              <p><strong>${c.author}</strong></p>
+              <p>${c.text}</p>
+            `;
+            list.appendChild(commentDiv);
+          });
+        });
+    }
+
+    firebase.auth().onAuthStateChanged(() => {
+      loadComments();
+    });
+  </script>
+</body>
+</html>

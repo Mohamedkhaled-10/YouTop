@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>الصفحة الرئيسية</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="firebaseConfig.js"></script>
+  <script defer src="home.js"></script>
+  <style>
+    body { margin: 0; font-family: sans-serif; background-color: #f9f9f9; direction: rtl; }
+    header {
+      background-color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    header .logo { font-weight: bold; font-size: 20px; color: #333; }
+    header .search-bar input {
+      padding: 8px 12px;
+      width: 300px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+      outline: none;
+    }
+    header .actions button {
+      margin-right: 10px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+    }
+    .videos {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+    .video-card {
+      background-color: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .video-card:hover { transform: scale(1.02); }
+    .video-card img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+    }
+    .video-info {
+      padding: 10px;
+    }
+    .video-info h4 {
+      margin: 0 0 5px;
+      font-size: 16px;
+      color: #333;
+    }
+    .video-info p {
+      margin: 0;
+      font-size: 14px;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">MyTube</div>
+    <div class="search-bar">
+      <input type="text" placeholder="ابحث عن فيديو...">
+    </div>
+    <div class="actions">
+      <button onclick="window.location.href='upload.html'">رفع فيديو</button>
+      <button onclick="logout()">تسجيل الخروج</button>
+    </div>
+  </header>
+
+  <section class="videos" id="video-list">
+    <!-- سيتم عرض الفيديوهات هنا -->
+  </section>
+
+</body>
+</html>
