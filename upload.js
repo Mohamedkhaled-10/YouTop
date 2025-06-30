@@ -11,7 +11,6 @@ async function uploadVideo() {
   const thumbnailFile = document.getElementById("thumbnailFile").files[0];
   const title = document.getElementById("title").value.trim();
   const description = document.getElementById("description").value.trim();
-  const progressBar = document.getElementById("uploadProgress");
 
   if (!videoFile || !thumbnailFile || !title) {
     alert("يرجى تعبئة جميع الحقول");
@@ -19,51 +18,20 @@ async function uploadVideo() {
   }
 
   const user = firebase.auth().currentUser;
-  const videoId = Date.now();
+  const timestamp = Date.now();
 
   try {
-    progressBar.style.display = "block";
-    progressBar.value = 0;
+    // رفع الفيديو
+    const videoRef = storage.ref(`videos/${timestamp}_${videoFile.name}`);
+    const videoSnap = await videoRef.put(videoFile);
+    const videoURL = await videoSnap.ref.getDownloadURL();
 
-    // رفع الفيديو مع متابعة النسبة
-    const videoRef = storage.ref(`videos/${videoId}_${videoFile.name}`);
-    const videoUploadTask = videoRef.put(videoFile);
+    // رفع الصورة المصغرة
+    const thumbRef = storage.ref(`thumbnails/${timestamp}_${thumbnailFile.name}`);
+    const thumbSnap = await thumbRef.put(thumbnailFile);
+    const thumbnailURL = await thumbSnap.ref.getDownloadURL();
 
-    const videoURL = await new Promise((resolve, reject) => {
-      videoUploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 50;
-          progressBar.value = progress;
-        },
-        reject,
-        async () => {
-          const url = await videoUploadTask.snapshot.ref.getDownloadURL();
-          resolve(url);
-        }
-      );
-    });
-
-    // رفع الصورة المصغرة مع متابعة النسبة
-    const thumbRef = storage.ref(`thumbnails/${videoId}_${thumbnailFile.name}`);
-    const thumbUploadTask = thumbRef.put(thumbnailFile);
-
-    const thumbnailURL = await new Promise((resolve, reject) => {
-      thumbUploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          const progress = 50 + (snapshot.bytesTransferred / snapshot.totalBytes) * 50;
-          progressBar.value = progress;
-        },
-        reject,
-        async () => {
-          const url = await thumbUploadTask.snapshot.ref.getDownloadURL();
-          resolve(url);
-        }
-      );
-    });
-
-    // حفظ بيانات الفيديو
+    // حفظ البيانات في Firestore
     await db.collection("videos").add({
       title,
       description,
@@ -74,10 +42,10 @@ async function uploadVideo() {
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    alert("✅ تم رفع الفيديو بنجاح!");
+    alert("تم رفع الفيديو بنجاح!");
     window.location.href = "index.html";
   } catch (err) {
-    alert("❌ حدث خطأ أثناء الرفع: " + err.message);
-    progressBar.style.display = "none";
+    console.error("خطأ في الرفع:", err);
+    alert("حدث خطأ أثناء رفع الفيديو: " + err.message);
   }
 }
